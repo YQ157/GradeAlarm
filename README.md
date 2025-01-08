@@ -5,3 +5,5 @@
 2. 将`config.ini`中的各项信息设置好
 3. 运行测试
 4. 挂到云服务器的crontab中定期执行(例如设置为15mins)，即可在新科目出成绩第一时间收到邮件
+# 推荐
+[成绩查询APP](https://github.com/YQ157/GradeAndDetails)：查询成绩和平时成绩
