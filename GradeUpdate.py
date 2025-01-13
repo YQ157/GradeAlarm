@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[384]:
+# In[14]:
 
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import requests
 import time
 import re
@@ -16,11 +18,11 @@ import configparser
 import yagmail
 
 
-# In[386]:
+# In[15]:
 
 
 config = configparser.ConfigParser()
-config.read('config.ini') # 此处建议更换为绝对路径，虚拟环境可能不能定位绝对路径
+config.read('config.ini', encoding='utf-8')  # 此处建议更换为绝对路径，虚拟环境可能不能定位绝对路径
 if not config:
     sys.exit("配置文件不存在或无法访问")
 try:
@@ -46,7 +48,7 @@ chrome_options.add_argument("--disable-gpu")  # 关闭 GPU 加速
 chrome_options.add_argument("--no-sandbox")
 
 
-# In[388]:
+# In[16]:
 
 
 driver = webdriver.Chrome(options=chrome_options)
@@ -54,25 +56,28 @@ driver.get('https://auth.cumtb.edu.cn/authserver/login?service=https%3A%2F%2Fjwx
 time.sleep(2)
 
 
-# In[389]:
+# In[18]:
 
 
-username_input = driver.find_element(By.XPATH, '//*[@id="username"]') 
+username_input = driver.find_element(By.XPATH, '//*[@id="login-normal"]/div/form/div[1]/nz-input-group/input') 
 username_input.send_keys(username)
 
 # 定位到密码输入框并填写
-password_input = driver.find_element(By.XPATH, '//*[@id="password"]') 
+password_input = driver.find_element(By.XPATH, '//*[@id="login-normal"]/div/form/div[2]/nz-input-group/input')  
 password_input.send_keys(password)
 
 # 定位到登录按钮并点击
-login_button = driver.find_element(By.XPATH, '//*[@id="casLoginForm"]/p[5]/button') 
+wait = WebDriverWait(driver, 5)
+login_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="login-normal"]/div[2]/form/div[6]/div/button')))
 login_button.click()
+# login_button = driver.find_element(By.XPATH, '//*[@id="submitBtn"]') 
+# login_button.click()
 
 # 等待登录操作完成，可以根据实际情况调整等待时间
 time.sleep(5)
 
 
-# In[390]:
+# In[19]:
 
 
 try:
@@ -92,7 +97,7 @@ cookies = driver.get_cookies()
 driver.quit()
 
 
-# In[391]:
+# In[20]:
 
 
 match = re.search(r"\d+",url)
@@ -105,7 +110,14 @@ else:
 print(url)
 
 
-# In[392]:
+# In[21]:
+
+
+for cookie in cookies:
+    print(f"{cookie['name']}_{cookie['value']}")
+
+
+# In[22]:
 
 
 if studentID != -1:
@@ -127,7 +139,7 @@ if studentID != -1:
             except:
                 sys.exit("成绩单生成失败")
             try:
-                yag = yagmail.SMTP(user=emailUser,password=emailPassword,host='smtp.qq.com',port=465)   # 自行配置 smtp 服务器，此处以 qq 为例
+                yag = yagmail.SMTP(user=emailUser,password=emailPassword,host='smtp.qq.com',port=465) # 自行配置 smtp 服务器，此处以 qq 为例
                 yag.send(to=emailUser,subject=email_subject,contents=email_content)
             except:
                 sys.exit("邮件发送失败")
